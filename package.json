@@ -1,0 +1,24 @@
+{
+  "name": "kickbot",
+  "module": "index.ts",
+  "type": "module",
+  "main": "src/index.ts",
+  "author": "szkajpur",
+  "license": "ISC",
+  "scripts": {
+    "start": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@levminer/speakeasy": "^1.4.2",
+    "axios": "^1.7.7",
+    "dotenv": "^16.4.5",
+    "get-video-id": "^4.1.7",
+    "kient": "1.0.1-16",
+    "winston": "^3.14.2",
+    "youtubei": "^1.5.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.1"
+  }
+}
