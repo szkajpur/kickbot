@@ -9,7 +9,7 @@ export const banphraseCheck = async function (text: string) {
 
         do {
             try {
-                const { data } = await axios.post(env.pajbotApi, { message: text });
+                const { data } = await axios.post(env.pajbotApi + "/api/v1/banphrases/test", { message: text });
                 banned = data.banned;
                 if (banned) {
 

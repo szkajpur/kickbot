@@ -11,8 +11,10 @@ const envSchema = z.object({
     kickChannel: z.string(),
     seChannelId: z.string(),
     seJWToken: z.string(),
-    pajbotApi: z.string().url()
-    
+    pajbotApi: z.string().url(),
+    pajbotSession: z.string(),
+    pajbotCsrfToken: z.string()
+
 });
 
 export const env = envSchema.parse(process.env);

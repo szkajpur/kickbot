@@ -5,3 +5,5 @@ kickChannel=demonzz1
 seChannelId=
 seJWToken=
 pajbotApi=
+pajbotSession=
+pajbotCsrfToken=

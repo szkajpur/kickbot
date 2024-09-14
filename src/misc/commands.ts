@@ -9,6 +9,8 @@ import { sendMsg } from "./send";
 import { performance } from "perf_hooks";
 import { client } from "./connections";
 
+const cooldowns = new Map<string, number>();
+
 axios.defaults.headers.common["Authorization"] = `Bearer ${env.seJWToken}`;
 
 export const handle = async function (msg: { data: { id: any; sender: { id: any; username: any; identity: { color: any; }; }; chatroom_id: any; content: any; type: any; created_at: any; }; }, admin: boolean) {
@@ -69,17 +71,17 @@ export const handle = async function (msg: { data: { id: any; sender: { id: any;
                     }
                     break;
                 }
-                const { id } = getVideoId(query);
-                if (!id || id === undefined) {
-                    await sendMsg(msgData.chatroom_id, `🎵 Invalid YouTube link provided.`);
-                    return;
-                }
-                const video = await ytClient.getVideo(id);
-                if (!video || video === undefined) {
-                    await sendMsg(msgData.chatroom_id, `🎵 Failed to fetch video.`);
-                    return;
-                }
                 try {
+                    const { id } = getVideoId(query);
+                    if (!id || id === undefined) {
+                        await sendMsg(msgData.chatroom_id, `🎵 Invalid YouTube link provided.`);
+                        return;
+                    }
+                    const video = await ytClient.getVideo(id);
+                    if (!video || video === undefined) {
+                        await sendMsg(msgData.chatroom_id, `🎵 Failed to fetch video.`);
+                        return;
+                    }
                     await axios.post(seAPI + "/songrequest/" + env.seChannelId + "/queue", { video: video.id })
                     await sendMsg(msgData.chatroom_id, `🎵 Queued video: ${video.title} by ${video.channel.name}`);
                 } catch (e) {
@@ -103,7 +105,6 @@ export const handle = async function (msg: { data: { id: any; sender: { id: any;
             case "!next": 
                 try {
                     const song = await axios.get(seAPI + "/songrequest/" + env.seChannelId + "/next");
-                    console.log(song.data)
                     if (!song.data.song.title) {
                         await sendMsg(msgData.chatroom_id, `🎵 No song currently queued.`);
                         return;
@@ -123,6 +124,40 @@ export const handle = async function (msg: { data: { id: any; sender: { id: any;
                     await sendMsg(msgData.chatroom_id, `🎵 ${action.charAt(0).toUpperCase() + action.slice(1)}ed song.`);
                 } catch (e) {
                     await sendMsg(msgData.chatroom_id, `🎵 Failed to ${action} song.`);
+                    return;
+                }
+                break;
+            case "!#playsound":
+                if (args.length < 2) {
+                    await sendMsg(msgData.chatroom_id, `🔊 Usage: !#playsound <sound>`);
+                    return;
+                }
+                const sound = args[1];
+                const cooldownKey = `playsound`;
+                const lastUsed = cooldowns.get(cooldownKey);
+                const now = Date.now();
+                const cooldownTime = 3 * 60 * 1000; // 3 minutes in milliseconds
+
+                if (lastUsed && now - lastUsed < cooldownTime) {
+                    const remainingTime = ((cooldownTime - (now - lastUsed)) / 1000).toFixed(0);
+                    await sendMsg(msgData.chatroom_id, `🔊 Please wait ${remainingTime} seconds before using this command again.`);
+                    return;
+                }
+
+                try {
+                    const response = await axios.post(env.pajbotApi + "/api/v1/playsound/" + sound + "/play", {}, {
+                        headers: {
+                            "x-csrftoken": env.pajbotCsrfToken,
+                            "x-requested-with": "XMLHttpRequest",
+                            "cookie": `session=${env.pajbotSession}`,
+                            "Referer": env.pajbotApi + "/admin/playsounds",
+                            "Referrer-Policy": "strict-origin-when-cross-origin"
+                        }
+                    });
+                    cooldowns.set(cooldownKey, now);
+                    await sendMsg(msgData.chatroom_id, `🔊 Playing sound: ${sound}`);
+                } catch (e) {
+                    await sendMsg(msgData.chatroom_id, `🔊 Failed to play ${sound} sound.`);
                     return;
                 }
                 break;
