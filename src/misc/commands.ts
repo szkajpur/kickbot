@@ -70,12 +70,12 @@ export const handle = async function (msg: { data: { id: any; sender: { id: any;
                     break;
                 }
                 const { id } = getVideoId(query);
-                if (!id) {
+                if (!id || id === undefined) {
                     await sendMsg(msgData.chatroom_id, `🎵 Invalid YouTube link provided.`);
                     return;
                 }
                 const video = await ytClient.getVideo(id);
-                if (!video) {
+                if (!video || video === undefined) {
                     await sendMsg(msgData.chatroom_id, `🎵 Failed to fetch video.`);
                     return;
                 }
@@ -103,11 +103,12 @@ export const handle = async function (msg: { data: { id: any; sender: { id: any;
             case "!next": 
                 try {
                     const song = await axios.get(seAPI + "/songrequest/" + env.seChannelId + "/next");
-                    if (!song.data.title) {
+                    console.log(song.data)
+                    if (!song.data.song.title) {
                         await sendMsg(msgData.chatroom_id, `🎵 No song currently queued.`);
                         return;
                     }
-                    await sendMsg(msgData.chatroom_id, `🎵 Next song: ${song.data.title} by ${song.data.channel}`)
+                    await sendMsg(msgData.chatroom_id, `🎵 Next song: ${song.data.song.title} by ${song.data.song.channel}`)
                 } catch (e) {
                     await sendMsg(msgData.chatroom_id, `🎵 Failed to fetch next song.`);
                     return;
